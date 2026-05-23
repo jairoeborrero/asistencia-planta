@@ -2,231 +2,268 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema Registro - Planta de Procesos</title>
-  <!-- Tailwind CSS para el diseño impecable -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Control de Asistencia - Planta</title>
+  <!-- Tailwind CSS para el diseño -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <!-- Librería del Escáner QR -->
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    /* Estilos táctiles optimizados para evitar retrasos al presionar botones */
+    button, .charla-card { touch-action: manipulation; }
+    body { -webkit-tap-highlight-color: transparent; }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-24">
 
-  <!-- BARRA DE NAVEGACIÓN (Tus 5 Pestañas Originales) -->
-  <nav class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 shadow-md">
-    <div class="max-w-7xl mx-auto px-4">
-      <div class="flex justify-between h-16 items-center">
-        <span class="font-bold text-indigo-400 text-lg tracking-tight">Planta Control v2.5</span>
-        <div class="hidden md:flex space-x-2">
-          <button onclick="cambiarPestaña('ingreso')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium bg-slate-900 text-white">Ingreso/Salida</button>
-          <button onclick="cambiarPestaña('charlas')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700">Charlas de Seguridad</button>
-          <button onclick="cambiarPestaña('personal')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700">Personal (109)</button>
-          <button onclick="cambiarPestaña('enrolar')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700">Enrolar Tarjetas</button>
-          <button onclick="cambiarPestaña('reportes')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700">Historial</button>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <!-- CABECERA DE LA APP -->
+  <header class="bg-slate-900 border-b border-slate-800 py-4 px-4 sticky top-0 z-40 shadow-lg text-center">
+    <h1 id="app-titulo-pantalla" class="text-lg font-bold text-white tracking-wide uppercase">Asistencia Turno</h1>
+    <p class="text-slate-500 text-xs mt-0.5">Sincronizado con Google Sheets</p>
+  </header>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+  <!-- CONTENIDO DE LAS PESTAÑAS -->
+  <main class="max-w-md mx-auto p-4 space-y-4">
     
-    <!-- PESTAÑA 1: INGRESO / SALIDA -->
-    <section id="pestaña-ingreso" class="tab-content block max-w-md mx-auto">
-      <div class="bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
-        <h2 class="text-xl font-bold text-white text-center mb-4">Registro de Asistencia General</h2>
+    <!-- 1. INGRESO / SALIDA -->
+    <section id="pestaña-ingreso" class="tab-content block">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+        <div class="text-center">
+          <h2 class="text-md font-semibold text-slate-300">Registro General de Personal</h2>
+          <p class="text-xs text-slate-500">Escanea tarjetas de PVC o códigos QR</p>
+        </div>
         
-        <!-- Contenedor del Escáner General -->
-        <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-900 p-2 relative mb-4">
-          <div id="reader-general" class="w-full min-h-[250px] bg-slate-900 rounded-lg"></div>
+        <div class="bg-black rounded-xl overflow-hidden border border-slate-800 p-1 bg-slate-950">
+          <div id="reader-general" class="w-full min-h-[240px] rounded-lg"></div>
         </div>
 
-        <div class="space-y-4">
-          <button onclick="encenderEscanerGeneral()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition-all">
-            📷 Encender Cámara de Turno
-          </button>
-          <div class="bg-slate-900 rounded-xl p-4 border border-slate-800">
-            <span class="text-xs font-semibold text-indigo-400 uppercase block mb-1">Resultado del Escaneo:</span>
-            <div id="log-general" class="text-sm font-mono text-slate-300">Esperando tarjeta...</div>
-          </div>
+        <button onclick="encenderEscanerGeneral()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all text-sm tracking-wide">
+          📷 ENCENDER CÁMARA TRASERA
+        </button>
+
+        <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-center">
+          <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">Estado de Lectura</span>
+          <div id="log-general" class="text-sm font-medium font-mono text-slate-400">Pulsar botón para iniciar</div>
         </div>
       </div>
     </section>
 
-    <!-- PESTAÑA 2: CHARLAS DE SEGURIDAD -->
+    <!-- 2. CHARLAS DE SEGURIDAD (COMPLETA) -->
     <section id="pestaña-charlas" class="tab-content hidden">
-      <div class="bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700 max-w-2xl mx-auto">
-        <h2 class="text-xl font-bold text-white mb-4">Control de Asistencia a Charlas</h2>
-        <p class="text-slate-400 text-sm mb-6">Selecciona la charla activa para empezar a escanear el ingreso del personal de turno.</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div onclick="seleccionarCharla(1, 'Charla de 5 Minutos: EPP Correcto')" class="charla-card bg-slate-900 p-4 rounded-xl border border-slate-700 cursor-pointer hover:border-indigo-500 transition-all">
-            <span class="text-xs font-bold text-emerald-400 uppercase bg-emerald-950/50 px-2 py-0.5 rounded">Activa Hoy</span>
-            <h3 class="font-semibold text-white mt-2">1. Uso Obligatorio de EPP en Planta</h3>
-            <p class="text-xs text-slate-400 mt-1">Lugar: Módulo de Inducción</p>
-          </div>
-          <div onclick="seleccionarCharla(2, 'Charla Especial: Riesgos Eléctricos')" class="charla-card bg-slate-900 p-4 rounded-xl border border-slate-700 cursor-pointer hover:border-indigo-500 transition-all">
-            <span class="text-xs font-bold text-slate-400 uppercase bg-slate-800 px-2 py-0.5 rounded font-mono">Próxima</span>
-            <h3 class="font-semibold text-white mt-2">2. Bloqueo y Etiquetado (LOTO)</h3>
-            <p class="text-xs text-slate-400 mt-1">Lugar: Talleres de Mantenimiento</p>
-          </div>
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+        <div>
+          <h2 class="text-md font-semibold text-slate-300">Charlas de Seguridad Obligatorias</h2>
+          <p class="text-xs text-slate-500 mb-3">Selecciona el tema que se dictará hoy:</p>
         </div>
-
-        <!-- Zona del Escáner de Charlas (Oculto hasta elegir charla) -->
-        <div id="zona-escaner-charla" class="hidden border-t border-slate-700 pt-6">
-          <h3 id="charla-activa-titulo" class="text-lg font-semibold text-indigo-400 mb-3">Charla: Ninguna</h3>
-          <div class="max-w-md mx-auto">
-            <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-900 p-2 mb-4">
-              <div id="reader-charla" class="w-full min-h-[250px] bg-slate-900 rounded-lg"></div>
+        
+        <!-- Opciones Reales de Charlas -->
+        <div class="space-y-2.5">
+          <div onclick="seleccionarCharla(1, 'Uso Correcto de EPP')" class="charla-card bg-slate-950 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-white">1. Uso de EPP en Planta</h3>
+              <p class="text-xs text-slate-500">Casco, botas, protección auditiva</p>
             </div>
-            <button onclick="encenderEscanerCharla()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all mb-4">
-              📷 Escanear Asistencia a Charla
-            </button>
-            <div id="log-charla" class="bg-slate-900 p-3 rounded-lg text-sm font-mono text-center text-slate-300 border border-slate-800">Esperando lectura...</div>
+            <span class="text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-1 rounded">5 MIN</span>
+          </div>
+
+          <div onclick="seleccionarCharla(2, 'Prevención de Riesgo Eléctrico')" class="charla-card bg-slate-950 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-white">2. Riesgos Eléctricos</h3>
+              <p class="text-xs text-slate-500">Tableros de control y subestación</p>
+            </div>
+            <span class="text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-1 rounded">10 MIN</span>
+          </div>
+
+          <div onclick="seleccionarCharla(3, 'Bloqueo y Etiquetado LOTO')" class="charla-card bg-slate-950 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-white">3. Procedimiento LOTO</h3>
+              <p class="text-xs text-slate-500">Bloqueo mecánico en mantenimiento</p>
+            </div>
+            <span class="text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-1 rounded">5 MIN</span>
+          </div>
+
+          <div onclick="seleccionarCharla(4, 'Seguridad en Trabajos en Altura')" class="charla-card bg-slate-950 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-white">4. Trabajos en Altura</h3>
+              <p class="text-xs text-slate-500">Uso de arnés y líneas de vida</p>
+            </div>
+            <span class="text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-1 rounded">15 MIN</span>
+          </div>
+        </div>
+
+        <!-- Escáner dedicado a Charlas -->
+        <div id="zona-escaner-charla" class="hidden border-t border-slate-800 pt-4 space-y-3">
+          <div class="bg-indigo-950/40 border border-indigo-900/60 rounded-xl p-3 text-center">
+            <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Charla Seleccionada</span>
+            <p id="charla-activa-titulo" class="text-xs font-semibold text-white mt-0.5">Ninguna</p>
+          </div>
+          
+          <div class="bg-black rounded-xl overflow-hidden border border-slate-800 p-1">
+            <div id="reader-charla" class="w-full min-h-[220px]"></div>
+          </div>
+          
+          <button onclick="encenderEscanerCharla()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md">
+            📷 ESCANEAR ASISTENCIA CHARLA
+          </button>
+          <div id="log-charla" class="bg-slate-950 p-3 rounded-xl text-xs font-mono text-center text-slate-400 border border-slate-800">Esperando lectura...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PERSONAL (109) -->
+    <section id="pestaña-personal" class="tab-content hidden">
+      <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-3">
+        <div class="flex justify-between items-center px-1">
+          <h2 class="text-sm font-bold text-slate-300">Personal Autorizado</h2>
+          <span class="text-[10px] font-bold bg-slate-950 text-indigo-400 border border-slate-800 px-2.5 py-1 rounded-full font-mono">109 Operarios</span>
+        </div>
+        
+        <!-- Lista compacta para móvil -->
+        <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+            <div>
+              <p class="text-xs font-semibold text-white">Jairo Erazo Borrero</p>
+              <p class="text-[10px] text-slate-500 font-mono">ID: 110XXXXXX1</p>
+            </div>
+            <span class="text-[9px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-900/60 px-2 py-0.5 rounded">ACTIVO</span>
+          </div>
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+            <div>
+              <p class="text-xs font-semibold text-white">Diego Erazo Borrero</p>
+              <p class="text-[10px] text-slate-500 font-mono">ID: 110XXXXXX2</p>
+            </div>
+            <span class="text-[9px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-900/60 px-2 py-0.5 rounded">ACTIVO</span>
+          </div>
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+            <div>
+              <p class="text-xs font-semibold text-white">Vanessa Abrigo</p>
+              <p class="text-[10px] text-slate-500 font-mono">ID: 110XXXXXX3</p>
+            </div>
+            <span class="text-[9px] font-bold bg-amber-950 text-amber-400 border border-amber-900/60 px-2 py-0.5 rounded">SIN QR</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- PESTAÑA 3: PERSONAL MAESTRO (109 Trabajadores) -->
-    <section id="pestaña-personal" class="tab-content hidden">
-      <div class="bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-white">Base de Datos de Personal Autorizado</h2>
-          <span class="bg-slate-900 text-indigo-400 font-mono text-xs px-3 py-1 rounded-full border border-slate-700 font-bold">109 Empleados Cargados</span>
+    <!-- 4. ENROLAR TARJETAS -->
+    <section id="pestaña-enrolar" class="tab-content hidden">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
+        <div>
+          <h2 class="text-md font-semibold text-slate-300">Enrolamiento de Nuevos QR</h2>
+          <p class="text-xs text-slate-500">Vincula una credencial física de PVC a un operario</p>
         </div>
-        <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-slate-800 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-700">
-                <th class="p-4 font-semibold">Cédula / ID</th>
-                <th class="p-4 font-semibold">Nombre Completo</th>
-                <th class="p-4 font-semibold">Cargo / Área</th>
-                <th class="p-4 font-semibold">Estado de Tarjeta QR</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-personal-cuerpo" class="text-sm text-slate-300 divide-y divide-slate-800">
-              <!-- Datos de simulación en frontend, la persistencia real se hace en tu Sheets -->
-              <tr>
-                <td class="p-4 font-mono">110XXXXXX1</td>
-                <td class="p-4 font-medium text-white">Jairo Erazo Borrero</td>
-                <td class="p-4 text-indigo-300">Administrador de Sistema</td>
-                <td class="p-4"><span class="text-xs bg-emerald-950 text-emerald-400 px-2 py-1 rounded border border-emerald-800 font-medium">✓ Vinculada Activa</span></td>
-              </tr>
-              <tr>
-                <td class="p-4 font-mono">110XXXXXX2</td>
-                <td class="p-4 font-medium text-white">Diego Erazo Borrero</td>
-                <td class="p-4">Operaciones Planta</td>
-                <td class="p-4"><span class="text-xs bg-emerald-950 text-emerald-400 px-2 py-1 rounded border border-emerald-800 font-medium">✓ Vinculada Activa</span></td>
-              </tr>
-              <tr>
-                <td class="p-4 font-mono">110XXXXXX3</td>
-                <td class="p-4 font-medium text-white">Vanessa Abrigo</td>
-                <td class="p-4">Supervisión Control</td>
-                <td class="p-4"><span class="text-xs bg-amber-950 text-amber-400 px-2 py-1 rounded border border-amber-800 font-medium">⚠️ Sin Enrolar</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- PESTAÑA 4: ENROLAR TARJETAS NUEVAS -->
-    <section id="pestaña-enrolar" class="tab-content hidden max-w-lg mx-auto">
-      <div class="bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
-        <h2 class="text-xl font-bold text-white mb-2">Vinculación de Código UUID</h2>
-        <p class="text-slate-400 text-xs mb-6">Asigna una tarjeta minera física de PVC o código QR nuevo a un trabajador de la lista maestra.</p>
         
-        <div class="space-y-4">
+        <div class="space-y-3">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">1. Seleccionar Trabajador:</label>
-            <select id="select-enrolar-personal" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-              <option value="">-- Elige un empleado sin tarjeta --</option>
-              <option value="12">Vanessa Abrigo (Supervisión Control)</option>
-              <option value="34">Jonathan Erazo Borrero (Logística)</option>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">1. Seleccionar Operario</label>
+            <select id="select-enrolar-personal" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-indigo-500 h-11">
+              <option value="">-- Selecciona el empleado --</option>
+              <option value="3">Vanessa Abrigo (Supervisión Control)</option>
+              <option value="4">Jonathan Erazo Borrero (Logística)</option>
             </select>
           </div>
 
-          <div id="zona-escanear-tarjeta" class="border-t border-slate-700 pt-4">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">2. Escanear Código Nuevo:</label>
-            <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-900 p-2 mb-4">
-              <div id="reader-enrolar" class="w-full min-h-[200px] bg-slate-900 rounded-lg"></div>
+          <div class="border-t border-slate-800 pt-3 space-y-3">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">2. Escanear Código Nuevo</label>
+            <div class="bg-black rounded-xl overflow-hidden border border-slate-800 p-1 bg-slate-950">
+              <div id="reader-enrolar" class="w-full min-h-[200px]"></div>
             </div>
-            <button onclick="encenderEscanerEnrolar()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all mb-3">
-              📷 Activar Escáner para Enrolamiento
+            <button onclick="encenderEscanerEnrolar()" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md">
+              📷 ESCANEAR CREDENCIAL NUEVA
             </button>
-            <div id="log-enrolar" class="bg-slate-900 p-3 rounded-lg text-sm font-mono text-center text-slate-300 border border-slate-800">Esperando lectura de tarjeta...</div>
+            <div id="log-enrolar" class="bg-slate-950 p-3 rounded-xl text-xs font-mono text-center text-slate-400 border border-slate-800">Esperando lectura...</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- PESTAÑA 5: HISTORIAL Y REPORTES -->
+    <!-- 5. HISTORIAL -->
     <section id="pestaña-reportes" class="tab-content hidden">
-      <div class="bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
-        <h2 class="text-xl font-bold text-white mb-4">Registro de Marcaciones Recientes (Hoy)</h2>
-        <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-slate-800 text-slate-300 text-xs uppercase tracking-wider border-b border-slate-700">
-                <th class="p-4 font-semibold">Hora de Registro</th>
-                <th class="p-4 font-semibold">Trabajador</th>
-                <th class="p-4 font-semibold">Tipo Movimiento</th>
-                <th class="p-4 font-semibold">Terminal/Ubicación</th>
-              </tr>
-            </thead>
-            <tbody class="text-sm text-slate-300 divide-y divide-slate-800">
-              <tr>
-                <td class="p-4 font-mono text-xs">07:14:22 AM</td>
-                <td class="p-4 text-white font-medium">Jairo Erazo Borrero</td>
-                <td class="p-4"><span class="bg-emerald-950 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-900 uppercase">Ingreso</span></td>
-                <td class="p-4 font-mono text-xs text-slate-400">Garita Principal Sur</td>
-              </tr>
-              <tr>
-                <td class="p-4 font-mono text-xs">07:18:05 AM</td>
-                <td class="p-4 text-white font-medium">Diego Erazo Borrero</td>
-                <td class="p-4"><span class="bg-emerald-950 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-900 uppercase">Ingreso</span></td>
-                <td class="p-4 font-mono text-xs text-slate-400">Garita Principal Sur</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-3">
+        <h2 class="text-sm font-bold text-slate-300 px-1">Registros de Hoy</h2>
+        
+        <div class="space-y-2">
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+            <div class="flex justify-between font-medium">
+              <span class="text-white">Jairo Erazo Borrero</span>
+              <span class="text-slate-500 font-mono">07:14 AM</span>
+            </div>
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400">Garita Principal Sur</span>
+              <span class="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/60">INGRESO</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+            <div class="flex justify-between font-medium">
+              <span class="text-white">Diego Erazo Borrero</span>
+              <span class="text-slate-500 font-mono">07:18 AM</span>
+            </div>
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400">Garita Principal Sur</span>
+              <span class="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/60">INGRESO</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- LÓGICA Y ENRUTAMIENTO DEL SISTEMA -->
+  <!-- MENÚ DE NAVEGACIÓN INFERIOR (Estilo App Nativa para Teléfonos) -->
+  <div class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 px-2 py-2.5 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.4)]">
+    <div class="max-w-md mx-auto grid grid-cols-5 text-center">
+      <button onclick="cambiarPestaña('ingreso', 'Asistencia Turno')" class="nav-tab-btn flex flex-col items-center justify-center text-indigo-400">
+        <span class="text-lg">🕒</span>
+        <span class="text-[9px] font-bold mt-1 tracking-tight">Turno</span>
+      </button>
+      <button onclick="cambiarPestaña('charlas', 'Charlas')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
+        <span class="text-lg">🛡️</span>
+        <span class="text-[9px] font-bold mt-1 tracking-tight">Charlas</span>
+      </button>
+      <button onclick="cambiarPestaña('personal', 'Personal')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
+        <span class="text-lg">👥</span>
+        <span class="text-[9px] font-bold mt-1 tracking-tight">Nómina</span>
+      </button>
+      <button onclick="cambiarPestaña('enrolar', 'Enrolamiento')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
+        <span class="text-lg">🪪</span>
+        <span class="text-[9px] font-bold mt-1 tracking-tight">Enrolar</span>
+      </button>
+      <button onclick="cambiarPestaña('reportes', 'Historial')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
+        <span class="text-lg">📋</span>
+        <span class="text-[9px] font-bold mt-1 tracking-tight">Log</span>
+      </button>
+    </div>
+  </div>
+
   <script>
-    // 🔴 REEMPLAZA ESTA URL CON TU ENLACE PÚBLICO DE GOOGLE APPS SCRIPT (Terminado en /exec)
+    // 🔴 CAMBIA ESTA URL POR TU LINK DE GOOGLE APPS SCRIPT PÚBLICO (/exec)
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxaTwGsifG7CKjLKqZm3kWy-0Mb79T5ZLdoxj05XXSAr5h-qRfTRh1WVAQtFL_hMdPfdQ/exec";
 
-    // Variables de control de los escáneres
     let html5QrcodeGeneral = null;
     let html5QrcodeCharla = null;
     let html5QrcodeEnrolar = null;
     let charlaActivaId = null;
 
-    // Sistema de navegación nativo entre las 5 pestañas
-    function cambiarPestaña(pestañaId) {
-      // Ocultar todos los contenidos
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
-      
-      // Mostrar la pestaña seleccionada
-      const activa = document.getElementById('pestaña-' + pestañaId);
-      activa.classList.remove('hidden');
-      if(pestañaId === 'ingreso' || pestañaId === 'enrolar') activa.classList.add('block');
+    function cambiarPestaña(pestañaId, tituloSuperior) {
+      // Modificar el título de la barra superior para saber dónde estás parado
+      document.getElementById('app-titulo-pantalla').innerText = tituloSuperior;
 
-      // Apagar cámaras activas al cambiar de pestaña para no calentar el teléfono
+      // Intercambiar visibilidad de las secciones
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('pestaña-' + pestañaId).classList.remove('hidden');
+
+      // Limpieza de cámaras activas para optimizar procesador y batería
       apagarTodasLasCamaras();
 
-      // Cambiar estilos visuales de los botones de la barra superior
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('bg-slate-900', 'text-white');
-        btn.classList.add('text-slate-400', 'hover:bg-slate-700');
+      // Cambiar los colores de los íconos del menú inferior
+      const botones = document.querySelectorAll('.nav-tab-btn');
+      botones.forEach(btn => {
+        btn.classList.remove('text-indigo-400');
+        btn.classList.add('text-slate-500');
       });
-      event.currentTarget.classList.add('bg-slate-900', 'text-white');
-      event.currentTarget.classList.remove('text-slate-400', 'hover:bg-slate-700');
+      event.currentTarget.classList.add('text-indigo-400');
+      event.currentTarget.classList.remove('text-slate-500');
     }
 
     function apagarTodasLasCamaras() {
@@ -235,45 +272,46 @@
       try { if(html5QrcodeEnrolar) html5QrcodeEnrolar.stop(); } catch(e){}
     }
 
-    // --- MANEJO DE ESCÁNER GENERAL ---
     function encenderEscanerGeneral() {
       apagarTodasLasCamaras();
       html5QrcodeGeneral = new Html5Qrcode("reader-general");
-      html5QrcodeGeneral.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+      html5QrcodeGeneral.start({ facingMode: "environment" }, { fps: 10, qrbox: 240 },
         function(text) { enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: null }, 'log-general'); },
         function(err) {}
       ).catch(err => {
-        html5QrcodeGeneral.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, function(text) {
+        html5QrcodeGeneral.start({ facingMode: "user" }, { fps: 10, qrbox: 240 }, function(text) {
           enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: null }, 'log-general');
         });
       });
     }
 
-    // --- MANEJO DE CHARLAS ---
     function seleccionarCharla(id, titulo) {
       charlaActivaId = id;
-      document.getElementById('charla-activa-titulo').innerText = "Charla Seleccionada: " + titulo;
+      document.getElementById('charla-activa-titulo').innerText = titulo.toUpperCase();
       document.getElementById('zona-escaner-charla').classList.remove('hidden');
+      
+      // Marcar visualmente la tarjeta seleccionada
+      document.querySelectorAll('.charla-card').forEach(c => c.classList.remove('border-indigo-500', 'bg-slate-900'));
+      event.currentTarget.classList.add('border-indigo-500', 'bg-slate-900');
     }
 
     function encenderEscanerCharla() {
-      if(!charlaActivaId) return alert("Por favor selecciona una charla primero.");
+      if(!charlaActivaId) return;
       apagarTodasLasCamaras();
       html5QrcodeCharla = new Html5Qrcode("reader-charla");
-      html5QrcodeCharla.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+      html5QrcodeCharla.start({ facingMode: "environment" }, { fps: 10, qrbox: 220 },
         function(text) { enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: charlaActivaId }, 'log-charla'); },
         function(err) {}
       ).catch(err => {
-        html5QrcodeCharla.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, function(text) {
+        html5QrcodeCharla.start({ facingMode: "user" }, { fps: 10, qrbox: 220 }, function(text) {
           enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: charlaActivaId }, 'log-charla');
         });
       });
     }
 
-    // --- MANEJO DE ENROLAMIENTO ---
     function encenderEscanerEnrolar() {
       const filaSeleccionada = document.getElementById('select-enrolar-personal').value;
-      if(!filaSeleccionada) return alert("Debes seleccionar a un trabajador de la lista primero.");
+      if(!filaSeleccionada) return alert("Selecciona un operario primero.");
       
       apagarTodasLasCamaras();
       html5QrcodeEnrolar = new Html5Qrcode("reader-enrolar");
@@ -287,9 +325,8 @@
       });
     }
 
-    // --- CONEXIÓN COMPARTIDA POR FETCH AL GOOGLE SHEETS MAESTRO ---
     function enviarPeticionSheets(accionNombre, datosCuerpo, elementoLogId) {
-      document.getElementById(elementoLogId).innerText = "Conectando con base de datos...";
+      document.getElementById(elementoLogId).innerHTML = "<span class='text-amber-400 font-medium animate-pulse'>Sincronizando...</span>";
       
       const cuerpoCompleto = Object.assign({ accion: accionNombre }, datosCuerpo);
       
@@ -300,12 +337,11 @@
         body: JSON.stringify(cuerpoCompleto)
       })
       .then(() => {
-        document.getElementById(elementoLogId).innerHTML = "<span class='text-emerald-400 font-bold'>✓ Registro enviado con éxito al Excel.</span>";
-        // Sonido de confirmación opcional si el teléfono lo permite
-        try { window.navigator.vibrate(100); } catch(e){}
+        document.getElementById(elementoLogId).innerHTML = "<span class='text-emerald-400 font-bold'>✓ REGISTRADO CON ÉXITO</span>";
+        try { window.navigator.vibrate([80, 50, 80]); } catch(e){}
       })
       .catch(error => {
-        document.getElementById(elementoLogId).innerText = "❌ Error de conexión de red.";
+        document.getElementById(elementoLogId).innerHTML = "<span class='text-rose-400 font-bold'>❌ ERROR DE CONEXIÓN</span>";
         console.error(error);
       });
     }

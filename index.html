@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Registro - Planta de Procesos</title>
+  <!-- Tailwind CSS para el diseño elegante -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- Librería del Escáner QR -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans p-4">
+
+  <div class="max-w-md mx-auto bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
+    <header class="text-center mb-6">
+      <h1 class="text-2xl font-bold tracking-tight text-white">Control de Asistencia</h1>
+      <p class="text-slate-400 text-sm mt-1">Planta de Procesos - Conexión Segura</p>
+    </header>
+
+    <!-- Zona del Lector QR -->
+    <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-800 p-2 relative mb-4">
+      <div id="reader-general" class="w-full min-h-[250px] bg-slate-900 rounded-lg"></div>
+    </div>
+
+    <!-- Panel de Control y Logs -->
+    <div class="space-y-4">
+      <button onclick="encenderEscanerGeneral()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition-all">
+        📷 Activar Cámara Escáner
+      </button>
+
+      <div class="bg-slate-900 rounded-xl p-4 border border-slate-800">
+        <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider block mb-1">Estado del Terminal:</span>
+        <div id="log-general" class="text-sm text-slate-300 font-medium font-mono">Esperando activación...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🔴 PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT (La que termina en /exec)
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxaTwGsifG7CKjLKqZm3kWy-0Mb79T5ZLdoxj05XXSAr5h-qRfTRh1WVAQtFL_hMdPfdQ/exec";
+
+    let html5QrcodeGeneral = null;
+
+    function encenderEscanerGeneral() {
+      if(html5QrcodeGeneral) {
+        try { html5QrcodeGeneral.stop(); } catch(e){}
+      }
+      
+      html5QrcodeGeneral = new Html5Qrcode("reader-general");
+      
+      // Intentamos usar la cámara trasera por defecto ("environment")
+      html5QrcodeGeneral.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+        function(text) {
+          enviarDatosAlSheets(text);
+        },
+        function(err) {}
+      ).catch(err => {
+        // Alternativa si falla la detección automática en iOS/Safari (Cámara frontal/"user")
+        html5QrcodeGeneral.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, function(text) {
+          enviarDatosAlSheets(text);
+        });
+      });
+    }
+
+    // El puente que envía el código QR a tu archivo Excel sin intermediarios
+    function enviarDatosAlSheets(uuidCodigo) {
+      document.getElementById('log-general').innerText = "Enviando datos a Sheets...";
+      
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors", // Evita problemas de bloqueo de dominios cruzados
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "registrarMarcacionQR",
+          uuid: uuidCodigo,
+          charlaId: null
+        })
+      })
+      .then(() => {
+        document.getElementById('log-general').innerText = "✓ Código transmitido con éxito.";
+      })
+      .catch(error => {
+        document.getElementById('log-general').innerText = "❌ Error de red al conectar.";
+        console.error(error);
+      });
+    }
+  </script>
+</body>
+</html>

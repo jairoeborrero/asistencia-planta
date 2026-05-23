@@ -7,10 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    /* Estilos táctiles optimizados para evitar retrasos al presionar botones */
-    button, .charla-card { touch-action: manipulation; }
+    button, .card-click { touch-action: manipulation; }
     body { -webkit-tap-highlight-color: transparent; }
-    /* Estilo para scrollbar sutil en nómina */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -19,349 +17,80 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-24">
 
   <header class="bg-slate-900 border-b border-slate-800 py-4 px-4 sticky top-0 z-40 shadow-lg text-center">
-    <h1 id="app-titulo-pantalla" class="text-lg font-bold text-white tracking-wide uppercase">Asistencia Turno</h1>
-    <p class="text-slate-500 text-xs mt-0.5">Sincronizado con Google Sheets</p>
+    <h1 id="app-titulo-pantalla" class="text-base font-bold text-white tracking-wide uppercase">Pantalla Inicio</h1>
+    <p class="text-slate-500 text-[10px] mt-0.5">Control de Planta Sincronizado</p>
   </header>
 
   <main class="max-w-md mx-auto p-4 space-y-4">
     
-    <section id="pestaña-ingreso" class="tab-content block">
-      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
-        <div class="text-center">
-          <h2 class="text-md font-semibold text-slate-300">Registro General de Personal</h2>
-          <p class="text-xs text-slate-500">Escanea tarjetas de PVC o códigos QR</p>
-        </div>
+    <section id="pestaña-inicio" class="tab-content block space-y-4">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
+        <h2 class="text-sm font-bold text-slate-300 mb-4 uppercase tracking-wider">Resumen del Día en Tiempo Real</h2>
         
-        <div class="bg-black rounded-xl overflow-hidden border border-slate-800 p-1 bg-slate-950">
-          <div id="reader-general" class="w-full min-h-[240px] rounded-lg"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+            <span class="text-2xl">🛡️</span>
+            <div id="dash-asistieron-charla" class="text-xl font-mono font-bold text-indigo-400 mt-1">...</div>
+            <p class="text-[10px] text-slate-500 font-medium uppercase mt-0.5">Asistieron Charla</p>
+          </div>
+          
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+            <span class="text-2xl">🏭</span>
+            <div id="dash-en-planta" class="text-xl font-mono font-bold text-emerald-400 mt-1">...</div>
+            <p class="text-[10px] text-slate-500 font-medium uppercase mt-0.5">En Planta</p>
+          </div>
+          
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+            <span class="text-2xl">🚪</span>
+            <div id="dash-ingresos-totales" class="text-xl font-mono font-bold text-amber-400 mt-1">...</div>
+            <p class="text-[10px] text-slate-500 font-medium uppercase mt-0.5">Ingresos Totales</p>
+          </div>
+          
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+            <span class="text-2xl">🗣️</span>
+            <div id="dash-charlas-dadas" class="text-xl font-mono font-bold text-purple-400 mt-1">...</div>
+            <p class="text-[10px] text-slate-500 font-medium uppercase mt-0.5">Charlas Dadas</p>
+          </div>
         </div>
 
-        <button onclick="encenderEscanerGeneral()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all text-sm tracking-wide">
-          📷 ENCENDER CÁMARA TRASERA
+        <button onclick="cargarDatosEscritorio()" class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-4 rounded-xl text-xs tracking-wide border border-slate-700 transition-all">
+          🔄 ACTUALIZAR INDICADORES
         </button>
-
-        <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 text-center">
-          <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">Estado de Lectura</span>
-          <div id="log-general" class="text-sm font-medium font-mono text-slate-400">Pulsar botón para iniciar</div>
-        </div>
       </div>
     </section>
 
-    <section id="pestaña-charlas" class="tab-content hidden">
-      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
-        <div>
-          <h2 class="text-md font-semibold text-slate-300">Charlas de Seguridad Obligatorias</h2>
-          <p class="text-xs text-slate-500 mb-3">Selecciona el tema activo desde tu base de datos:</p>
-        </div>
+    <section id="pestaña-charlas" class="tab-content hidden space-y-4">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3.5">
+        <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Crear Nueva Charla</h2>
         
-        <div id="contenedor-charlas-dinamicas" class="space-y-2.5">
-          <p class="text-xs text-slate-400 text-center animate-pulse py-4">Cargando temas registrados...</p>
-        </div>
-
-        <div id="zona-escaner-charla" class="hidden border-t border-slate-800 pt-4 space-y-3">
-          <div class="bg-indigo-950/40 border border-indigo-900/60 rounded-xl p-3 text-center">
-            <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Charla Seleccionada</span>
-            <p id="charla-activa-titulo" class="text-xs font-semibold text-white mt-0.5">Ninguna</p>
+        <div class="space-y-2.5">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tipo de Charla</label>
+              <input type="text" id="charla-tipo" placeholder="Ej. Seguridad" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Duración (Min)</label>
+              <input type="number" id="charla-duracion" placeholder="Ej. 5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            </div>
           </div>
           
-          <div class="bg-black rounded-xl overflow-hidden border border-slate-800 p-1">
-            <div id="reader-charla" class="w-full min-h-[220px]"></div>
-          </div>
-          
-          <button onclick="encenderEscanerCharla()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md">
-            📷 ESCANEAR ASISTENCIA CHARLA
-          </button>
-          <div id="log-charla" class="bg-slate-950 p-3 rounded-xl text-xs font-mono text-center text-slate-400 border border-slate-800">Esperando lectura...</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="pestaña-personal" class="tab-content hidden">
-      <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-3">
-        <div class="flex justify-between items-center px-1">
-          <h2 class="text-sm font-bold text-slate-300">Personal Autorizado</h2>
-          <span id="contador-operarios-badge" class="text-[10px] font-bold bg-slate-950 text-indigo-400 border border-slate-800 px-2.5 py-1 rounded-full font-mono">0 Operarios</span>
-        </div>
-        
-        <input type="text" id="buscador-nomina" oninput="filtrarNominaFiltro(this.value)" placeholder="🔍 Buscar operario por nombre o cédula..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 mb-2">
-
-        <div id="contenedor-nomina-dinamica" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
-          <p class="text-xs text-slate-400 text-center animate-pulse py-4">Conectando con la nómina en la nube...</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="pestaña-enrolar" class="tab-content hidden">
-      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
-        <div>
-          <h2 class="text-md font-semibold text-slate-300">Enrolamiento de Nuevos QR</h2>
-          <p class="text-xs text-slate-500">Vincula una credencial física de PVC a un operario</p>
-        </div>
-        
-        <div class="space-y-3">
           <div>
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">1. Seleccionar Operario</label>
-            <select id="select-enrolar-personal" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-indigo-500 h-11">
-              <option value="">-- Cargando lista de operarios... --</option>
-            </select>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tema Central</label>
+            <input type="text" id="charla-tema" placeholder="Nombre de la charla..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
           </div>
 
-          <div class="border-t border-slate-800 pt-3 space-y-3">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">2. Escanear Código Nuevo</label>
-            <div class="bg-black rounded-xl overflow-hidden border border-slate-800 p-1 bg-slate-950">
-              <div id="reader-enrolar" class="w-full min-h-[200px]"></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Lugar / Módulo</label>
+              <input type="text" id="charla-lugar" placeholder="Ej. Taller" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
             </div>
-            <button onclick="encenderEscanerEnrolar()" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md">
-              📷 ESCANEAR CREDENCIAL NUEVA
-            </button>
-            <div id="log-enrolar" class="bg-slate-950 p-3 rounded-xl text-xs font-mono text-center text-slate-400 border border-slate-800">Esperando lectura...</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="pestaña-reportes" class="tab-content hidden">
-      <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-3">
-        <h2 class="text-sm font-bold text-slate-300 px-1">Registros de Hoy</h2>
-        <div id="contenedor-historial-dinamico" class="space-y-2">
-          <p class="text-xs text-slate-500 text-center py-2">Toda marcación exitosa se envía de inmediato a tu Google Sheet.</p>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <div class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 px-2 py-2.5 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.4)]">
-    <div class="max-w-md mx-auto grid grid-cols-5 text-center">
-      <button onclick="cambiarPestaña('ingreso', 'Asistencia Turno')" class="nav-tab-btn flex flex-col items-center justify-center text-indigo-400">
-        <span class="text-lg">🕒</span>
-        <span class="text-[9px] font-bold mt-1 tracking-tight">Turno</span>
-      </button>
-      <button onclick="cambiarPestaña('charlas', 'Charlas')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
-        <span class="text-lg">🛡️</span>
-        <span class="text-[9px] font-bold mt-1 tracking-tight">Charlas</span>
-      </button>
-      <button onclick="cambiarPestaña('personal', 'Personal')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
-        <span class="text-lg">👥</span>
-        <span class="text-[9px] font-bold mt-1 tracking-tight">Nómina</span>
-      </button>
-      <button onclick="cambiarPestaña('enrolar', 'Enrolamiento')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
-        <span class="text-lg">🪪</span>
-        <span class="text-[9px] font-bold mt-1 tracking-tight">Enrolar</span>
-      </button>
-      <button onclick="cambiarPestaña('reportes', 'Historial')" class="nav-tab-btn flex flex-col items-center justify-center text-slate-500">
-        <span class="text-lg">📋</span>
-        <span class="text-[9px] font-bold mt-1 tracking-tight">Log</span>
-      </button>
-    </div>
-  </div>
-
-  <script>
-    // URL de tu Google Apps Script de confianza configurado como POST y GET público
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxaTwGsifG7CKjLKqZm3kWy-0Mb79T5ZLdoxj05XXSAr5h-qRfTRh1WVAQtFL_hMdPfdQ/exec";
-
-    let html5QrcodeGeneral = null;
-    let html5QrcodeCharla = null;
-    let html5QrcodeEnrolar = null;
-    let charlaActivaId = null;
-    
-    // Almacenamiento local en memoria de la base de datos descargada de la nube
-    let memoriaNominaOperarios = [];
-
-    // Al arrancar la app, descargamos la información legítima desde Google Sheets
-    window.onload = function() {
-      inicializarDatosDesdeSheets();
-    };
-
-    function inicializarDatosDesdeSheets() {
-      // Petición GET al script para jalar la información viva del personal y charlas
-      fetch(`${WEB_APP_URL}?getInitData=true`)
-        .then(response => response.json())
-        .then(data => {
-          // 1. Guardar y renderizar nómina real (109 operarios o los que tengas en la hoja)
-          if(data.personal) {
-            memoriaNominaOperarios = data.personal;
-            renderizarNominaPantalla(memoriaNominaOperarios);
-            actualizarSelectorEnrolamiento(memoriaNominaOperarios);
-          }
-          // 2. Cargar Charlas legítimas de la planta
-          if(data.charlas) {
-            renderizarCharlasDinamicas(data.charlas);
-          }
-        })
-        .catch(err => {
-          console.error("Error cargando base de datos inicial:", err);
-          // Plan B automático si la WebApp no soporta GET directo: Mensaje de espera interactivo
-          document.getElementById('contenedor-nomina-dinamica').innerHTML = "<p class='text-xs text-amber-400 text-center py-2'>⚠️ Vinculado en modo de escritura directa. Los registros se sincronizan al escanear.</p>";
-        });
-    }
-
-    function renderizarNominaPantalla(lista) {
-      const contenedor = document.getElementById('contenedor-nomina-dinamica');
-      document.getElementById('contador-operarios-badge').innerText = `${lista.length} Operarios`;
-      
-      if(lista.length === 0) {
-        contenedor.innerHTML = "<p class='text-xs text-slate-500 text-center py-4'>No se encontraron operarios.</p>";
-        return;
-      }
-
-      contenedor.innerHTML = lista.map(op => `
-        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-          <div>
-            <p class="text-xs font-semibold text-white">${op.nombre}</p>
-            <p class="text-[10px] text-slate-500 font-mono">ID / Cédula: ${op.cedula || 'Vínculo Activo'}</p>
-          </div>
-          <span class="text-[9px] font-bold ${op.hasUuid ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/60' : 'bg-amber-950 text-amber-400 border border-amber-900/60'} px-2 py-0.5 rounded">
-            ${op.hasUuid ? 'CON QR' : 'SIN QR'}
-          </span>
-        </div>
-      `).join('');
-    }
-
-    function actualizarSelectorEnrolamiento(lista) {
-      const select = document.getElementById('select-enrolar-personal');
-      let html = '<option value="">-- Selecciona el empleado --</option>';
-      lista.forEach(op => {
-        html += `<option value="${op.fila}">${op.nombre} (${op.cargo || 'Operario'})</option>`;
-      });
-      select.innerHTML = html;
-    }
-
-    function renderizarCharlasDinamicas(listaCharlas) {
-      const contenedor = document.getElementById('contenedor-charlas-dinamicas');
-      contenedor.innerHTML = listaCharlas.map(ch => `
-        <div onclick="seleccionarCharla('${ch.id}', '${ch.tema}')" class="charla-card bg-slate-950 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex items-center justify-between hover:border-slate-700">
-          <div>
-            <h3 class="text-sm font-semibold text-white">${ch.id}. ${ch.tema}</h3>
-            <p class="text-xs text-slate-500">${ch.descripcion || 'Charla obligatoria de seguridad en planta'}</p>
-          </div>
-          <span class="text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-1 rounded">${ch.duracion || '5'} MIN</span>
-        </div>
-      `).join('');
-    }
-
-    function filtrarNominaFiltro(busqueda) {
-      const termino = busqueda.toLowerCase().trim();
-      const filtrados = memoriaNominaOperarios.filter(op => 
-        op.nombre.toLowerCase().includes(termino) || (op.cedula && op.cedula.toString().includes(termino))
-      );
-      renderizarNominaPantalla(filtrados);
-    }
-
-    function cambiarPestaña(pestañaId, tituloSuperior) {
-      document.getElementById('app-titulo-pantalla').innerText = tituloSuperior;
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById('pestaña-' + pestañaId).classList.remove('hidden');
-
-      apagarTodasLasCamaras();
-
-      const botones = document.querySelectorAll('.nav-tab-btn');
-      botones.forEach(btn => {
-        btn.classList.remove('text-indigo-400');
-        btn.classList.add('text-slate-500');
-      });
-      event.currentTarget.classList.add('text-indigo-400');
-      event.currentTarget.classList.remove('text-slate-500');
-    }
-
-    function apagarTodasLasCamaras() {
-      try { if(html5QrcodeGeneral) html5QrcodeGeneral.stop(); } catch(e){}
-      try { if(html5QrcodeCharla) html5QrcodeCharla.stop(); } catch(e){}
-      try { if(html5QrcodeEnrolar) html5QrcodeEnrolar.stop(); } catch(e){}
-    }
-
-    function encenderEscanerGeneral() {
-      apagarTodasLasCamaras();
-      html5QrcodeGeneral = new Html5Qrcode("reader-general");
-      html5QrcodeGeneral.start({ facingMode: "environment" }, { fps: 10, qrbox: 240 },
-        function(text) { enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: null }, 'log-general'); },
-        function(err) {}
-      ).catch(err => {
-        html5QrcodeGeneral.start({ facingMode: "user" }, { fps: 10, qrbox: 240 }, function(text) {
-          enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: null }, 'log-general');
-        });
-      });
-    }
-
-    function seleccionarCharla(id, titulo) {
-      charlaActivaId = id;
-      document.getElementById('charla-activa-titulo').innerText = titulo.toUpperCase();
-      document.getElementById('zona-escaner-charla').classList.remove('hidden');
-      
-      document.querySelectorAll('.charla-card').forEach(c => c.classList.remove('border-indigo-500', 'bg-slate-900'));
-      event.currentTarget.classList.add('border-indigo-500', 'bg-slate-900');
-    }
-
-    function encenderEscanerCharla() {
-      if(!charlaActivaId) return;
-      apagarTodasLasCamaras();
-      html5QrcodeCharla = new Html5Qrcode("reader-charla");
-      html5QrcodeCharla.start({ facingMode: "environment" }, { fps: 10, qrbox: 220 },
-        function(text) { enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: charlaActivaId }, 'log-charla'); },
-        function(err) {}
-      ).catch(err => {
-        html5QrcodeCharla.start({ facingMode: "user" }, { fps: 10, qrbox: 220 }, function(text) {
-          enviarPeticionSheets("registrarMarcacionQR", { uuid: text, charlaId: charlaActivaId }, 'log-charla');
-        });
-      });
-    }
-
-    function encenderEscanerEnrolar() {
-      const filaSeleccionada = document.getElementById('select-enrolar-personal').value;
-      if(!filaSeleccionada) return alert("Selecciona un operario primero.");
-      
-      apagarTodasLasCamaras();
-      html5QrcodeEnrolar = new Html5Qrcode("reader-enrolar");
-      html5QrcodeEnrolar.start({ facingMode: "environment" }, { fps: 10, qrbox: 220 },
-        function(text) { enviarPeticionSheets("vincularQR", { fila: filaSeleccionada, uuid: text }, 'log-enrolar'); },
-        function(err) {}
-      ).catch(err => {
-        html5QrcodeEnrolar.start({ facingMode: "user" }, { fps: 10, qrbox: 220 }, function(text) {
-          enviarPeticionSheets("vincularQR", { fila: filaSeleccionada, uuid: text }, 'log-enrolar');
-        });
-      });
-    }
-
-    function enviarPeticionSheets(accionNombre, datosCuerpo, elementoLogId) {
-      document.getElementById(elementoLogId).innerHTML = "<span class='text-amber-400 font-medium animate-pulse'>Sincronizando...</span>";
-      
-      const cuerpoCompleto = Object.assign({ accion: accionNombre }, datosCuerpo);
-      
-      fetch(WEB_APP_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cuerpoCompleto)
-      })
-      .then(() => {
-        document.getElementById(elementoLogId).innerHTML = "<span class='text-emerald-400 font-bold'>✓ REGISTRADO CON ÉXITO</span>";
-        
-        // Agregar registro visual temporal al log histórico local
-        if(accionNombre === "registrarMarcacionQR") {
-          const contenedorHistorial = document.getElementById('contenedor-historial-dinamico');
-          const horaActual = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          const nuevaFilaLog = `
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
-              <div class="flex justify-between font-medium">
-                <span class="text-white">Código UUID: ${datosCuerpo.uuid.substring(0,8)}...</span>
-                <span class="text-slate-500 font-mono">${horaActual}</span>
-              </div>
-              <div class="flex justify-between items-center text-[10px]">
-                <span class="text-slate-400">${datosCuerpo.charlaId ? 'Asistencia Charla ID: ' + datosCuerpo.charlaId : 'Garita General Planta'}</span>
-                <span class="text-indigo-400 font-bold bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-900/60">ENVIADO</span>
-              </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Instructor Responsable</label>
+              <input type="text" id="charla-instructor" placeholder="Nombre instructor..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
             </div>
-          `;
-          contenedorHistorial.insertAdjacentHTML('afterbegin', nuevaFilaLog);
-        }
+          </div>
 
-        try { window.navigator.vibrate([80, 50, 80]); } catch(e){}
-      })
-      .catch(error => {
-        document.getElementById(elementoLogId).innerHTML = "<span class='text-rose-400 font-bold'>❌ ERROR DE CONEXIÓN</span>";
-        console.error(error);
-      });
-    }
-  </script>
-</body>
-</html>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Aspectos Tratados</label>
+            <textarea id="charla-aspectos" rows="2" placeholder="Detalles u observaciones de la sesión..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 resize-none"></textarea
